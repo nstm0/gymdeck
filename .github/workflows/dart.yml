@@ -43,10 +43,11 @@ jobs:
 
       - name: Generate release tag
         id: generate_release_tag
-        uses: alexvingg/next-release-tag@v1.0.3
+        uses: amitsingh-007/next-release-tag@v4.0.0
         with:
           github_token: ${{ secrets.RELEASE_TOKEN }}
-          tag_prefix: ''
+          tag_prefix: 'v'
+          tag_template: 'yyyy.mm.dd.i'
 
       - name: Create a Release
         uses: elgohr/Github-Release-Action@v5

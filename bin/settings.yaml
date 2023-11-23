@@ -1,0 +1,9 @@
+# SettingsYaml settings file
+temperatureLimit: 85 #Max temperature limit
+minPowerLimit: 2 #Min TDP value
+maxPowerLimit: 30 #Max TDP Value
+powerLimitChangeStep: 2 #Value to increment or decrement from current TDP
+delay: 1000 #Loop delay in milliseconds
+maxCurveOptimizer: 5 #Max Curve Optimizer value
+minCurveOptimizer: 0 #Min Curve Optimizer value
+curveOptimizerChangeStep: 1 #Value to increment or decrement from current Curve Optimizer

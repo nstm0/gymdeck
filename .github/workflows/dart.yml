@@ -39,7 +39,7 @@ jobs:
         run: dart compile exe bin/gymdeck.dart -o bin/gymdeck
 
       - name: Copy release files
-        run: mkdir release && cp bin/gymdeck bin/libsysres-x86_64.so bin/ryzenadj bin/ryzenadjcoper bin/settings.yaml release/
+        run: mkdir release && zip -u release/linux-x86_64.zip bin/gymdeck bin/libsysres-x86_64.so bin/ryzenadj bin/ryzenadjcoper bin/settings.yaml
 
       - name: Generate release tag
         id: generate_release_tag
@@ -49,10 +49,9 @@ jobs:
           tag_prefix: 'v'
           tag_template: 'yyyy.mm.dd.i'
 
-      - name: Create Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+      - uses: ncipollo/release-action@v1
         with:
-          tag_name: ${{ steps.generate_release_tag.outputs.next_release_tag }}
-          release_name: Release ${{ steps.generate_release_tag.outputs.next_release_tag }}
+          artifacts: "release/linux-x86_64.zip"
+          tag: ${{ steps.generate_release_tag.outputs.next_release_tag }}
+          name: Release ${{ steps.generate_release_tag.outputs.next_release_tag }}
+

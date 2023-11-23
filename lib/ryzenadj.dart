@@ -27,7 +27,7 @@ class RyzenAdjWrapper{
   static int applyCurveOptimizerPerCore(int curveOptimizer, int core) {
     String arguments;
     if (curveOptimizer > 0) {
-      arguments = "-y --core$core $curveOptimizer";
+      arguments = "-y --core$core -$curveOptimizer";
       print('New CO for Core $core: $curveOptimizer');
     }
     else {

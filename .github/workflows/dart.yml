@@ -41,18 +41,18 @@ jobs:
       - name: Copy release files
         run: mkdir release && cp bin/gymdeck bin/libsysres-x86_64.so bin/ryzenadj bin/ryzenadjcoper bin/settings.yaml release/
 
-      # - name: Generate release tag
-      #   id: generate_release_tag
-      #   uses: amitsingh-007/next-release-tag@v4.0.0
-      #   with:
-      #     github_token: ${{ secrets.RELEASE_TOKEN }}
-      #     tag_prefix: 'v'
-      #     tag_template: 'yyyy.mm.dd.i'
+      - name: Generate release tag
+        id: generate_release_tag
+        uses: amitsingh-007/next-release-tag@v4.0.0
+        with:
+          github_token: ${{ secrets.RELEASE_TOKEN }}
+          tag_prefix: 'v'
+          tag_template: 'yyyy.mm.dd.i'
 
       - name: Create Release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         with:
-          tag_name: v2023.11.24.1
-          release_name: Release v2023.11.24.1
+          tag_name: ${{ steps.generate_release_tag.outputs.next_release_tag }}
+          release_name: Release ${{ steps.generate_release_tag.outputs.next_release_tag }}

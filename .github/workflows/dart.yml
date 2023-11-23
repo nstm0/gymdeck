@@ -35,9 +35,23 @@ jobs:
       - name: Analyze project source
         run: dart analyze
 
+      - name: Build executable
+        run: dart compile exe bin/gymdeck.dart -o bin/gymdeck
+
+      - name: Copy release files
+        run: mkdir release && cp bin/{gymdeck, libsysres-x86_64.so, ryzenadj, ryzenadjcoper, settings.yaml} release/
+
+      - name: Generate release tag
+        id: generate_release_tag
+        uses: alexvingg/next-release-tag@v1.0.3
+        with:
+          github_token: ${{ secrets.RELEASE_TOKEN }}
+          tag_prefix: ''
+
       - name: Create a Release
         uses: elgohr/Github-Release-Action@v5
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         with:
-          title: MyReleaseMessage
+          title: Release ${{ steps.generate_release_tag.outputs.release_tag }}
+          workdir: release/

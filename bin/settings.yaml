@@ -4,6 +4,34 @@ minPowerLimit: 2 #Min TDP value
 maxPowerLimit: 30 #Max TDP Value
 powerLimitChangeStep: 2 #Value to increment or decrement from current TDP
 delay: 1000 #Loop delay in milliseconds
-maxCurveOptimizer: 5 #Max Curve Optimizer value
-minCurveOptimizer: 0 #Min Curve Optimizer value
+
+#General CPU CU Settings
 curveOptimizerChangeStep: 1 #Value to increment or decrement from current Curve Optimizer
+curveOptimizerType: 0 #0 for All CPU CU, 1 for Per Core CPU CU
+
+#For All CPU CU Settings
+maxAllCoreCurveOptimizer: 5 #Max Curve Optimizer value
+minAllCoreCurveOptimizer: 0 #Min Curve Optimizer value
+
+#Per Core CPU CU Settings
+perCoreCurveOptimizerCoreCount: 4 #Number of CPU Cores to apply CU
+perCoreCurveOptimizerSets:
+  - id: 0
+    min: 0
+    max: 5
+  - id: 1
+    min: 0
+    max: 5
+  - id: 2
+    min: 0
+    max: 5
+  - id: 3
+    min: 0
+    max: 5
+
+
+
+
+
+
+

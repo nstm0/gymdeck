@@ -23,4 +23,21 @@ class RyzenAdjWrapper{
     // Save new CO to avoid unnecessary reapplies
     return curveOptimizer;
   }
+
+  static int applyCurveOptimizerPerCore(int curveOptimizer, int core) {
+    String arguments;
+    if (curveOptimizer > 0) {
+      arguments = "-y --core$core $curveOptimizer";
+      print('New CO for Core $core: $curveOptimizer');
+    }
+    else {
+      arguments = "-y --core$core 0";
+    }
+
+    var proc = Process.runSync('${File.fromUri(Platform.script).parent.path}/ryzenadjcoper', [arguments]);
+    print(proc.stderr);
+
+    // Save new CO to avoid unnecessary reapplies
+    return curveOptimizer;
+  }
 }

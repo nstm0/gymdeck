@@ -10,28 +10,64 @@ void main() async {
 
   var settings = SettingsYaml.load(pathToSettings: '${File.fromUri(Platform.script).parent.path}/settings.yaml');
 
-  int maxTemperature = settings['temperatureLimit'] as int; //celsius of course
+  //int maxTemperature = settings['temperatureLimit'] as int; //celsius of course
 
   //Deck specific limits
-  int minPowerLimit = settings['minPowerLimit'] as int; //wats
-  int maxPowerLimit = settings['maxPowerLimit'] as int; //safety :3, watts
-  int maxCurveOptimizer = settings['maxCurveOptimizer'] as int; //kurwas
-  int minCurveOptimiser = settings['minCurveOptimizer'] as int; //kurwas
+  //int minPowerLimit = settings['minPowerLimit'] as int; //wats
+  //int maxPowerLimit = settings['maxPowerLimit'] as int; //safety :3, watts
+
+  //ALL CPU CU Settings init
+  int maxAllCoreCurveOptimizer = settings['maxAllCoreCurveOptimizer'] as int; //kurwas
+  int minAllCoreCurveOptimiser = settings['minAllCoreCurveOptimizer'] as int; //kurwas
+
+  //Per Core CPU CU Settings init
+  int perCoreCurveOptimizerCoreCount = settings['perCoreCurveOptimizerCoreCount'] as int; //Number of CPU Cores
+  List<dynamic> perCoreCurveOptimizerSets = settings['perCoreCurveOptimizerSets'] as List;
+
+  //General CPU CU Settings init
+  int curveOptimizerType = settings['curveOptimizerType'] as int; //0 - All CPU, 1 - per core CPU
   int curveOptimizerChangeStep = settings['curveOptimizerChangeStep'] as int; //kurwas
 
-  int powerLimitChangeStep = settings['powerLimitChangeStep'] as int; //wats
-  int currentPowerLimit = 15; //watts
+  //int powerLimitChangeStep = settings['powerLimitChangeStep'] as int; //wats
+  //int currentPowerLimit = 15; //watts
   int previousCurveOptimizer = 0; //kurwas
+  List<int> perCorePreviousCurveOptimizer = List.filled(perCoreCurveOptimizerCoreCount, 0); // kurwas per core
   int prevCpuLoadAverage = -1; //percents
+  List<int> perCorePreviousCpuLoadAverage = List.filled(perCoreCurveOptimizerCoreCount, -1); // percents per core
   while (true) {
     String temperatureFileContent = File('/sys/class/thermal/thermal_zone0/temp').readAsStringSync();
     int temperature = int.parse(temperatureFileContent) ~/ 1000;
     int cpuLoadAverage = (SystemResources.cpuLoadAvg() * 100).toInt();
 
     //Process TDP works
-    currentPowerLimit = processTDP(temperature, cpuLoadAverage, maxTemperature, currentPowerLimit, minPowerLimit, maxPowerLimit, powerLimitChangeStep);
-    (prevCpuLoadAverage, previousCurveOptimizer) = processCO(temperature, cpuLoadAverage, maxCurveOptimizer, curveOptimizerChangeStep, previousCurveOptimizer, prevCpuLoadAverage, minCurveOptimiser);
-
+    //currentPowerLimit = processTDP(temperature, cpuLoadAverage, maxTemperature, currentPowerLimit, minPowerLimit, maxPowerLimit, powerLimitChangeStep);
+    if (curveOptimizerType == 1) {
+      for (int i = 0; i < perCoreCurveOptimizerCoreCount; i++){
+        (prevCpuLoadAverage, previousCurveOptimizer) = processCO(
+            temperature,
+            cpuLoadAverage,
+            perCoreCurveOptimizerSets[i]['max'],
+            curveOptimizerChangeStep,
+            perCorePreviousCurveOptimizer[i],
+            perCorePreviousCpuLoadAverage[i],
+            perCoreCurveOptimizerSets[i]['min'],
+            true,
+            i);
+        perCorePreviousCurveOptimizer[i] = previousCurveOptimizer;
+        perCorePreviousCpuLoadAverage[i] = prevCpuLoadAverage;
+      }
+    } else {
+      (prevCpuLoadAverage, previousCurveOptimizer) = processCO(
+          temperature,
+          cpuLoadAverage,
+          maxAllCoreCurveOptimizer,
+          curveOptimizerChangeStep,
+          previousCurveOptimizer,
+          prevCpuLoadAverage,
+          minAllCoreCurveOptimiser,
+          false,
+          0);
+    }
     sleep(Duration(milliseconds: settings['delay'] as int));
   }
 
@@ -57,7 +93,9 @@ int processTDP(int temperature, int cpuLoadAverage, int maxTemperature, int curr
   return currentPowerLimit;
 }
 
-(int, int) processCO(int temperature, int cpuLoadAverage, int maxCurveOptimizer, int curveOptimizerChangeStep, int previousCurveOptimizer, int prevCpuLoadAverage, int minCurveOptimiser) {
+
+
+(int, int) processCO(int temperature, int cpuLoadAverage, int maxCurveOptimizer, int curveOptimizerChangeStep, int previousCurveOptimizer, int prevCpuLoadAverage, int minCurveOptimiser, bool isPerCore, int core) {
     int newMaxCO = maxCurveOptimizer;
     int newCO = 0;
     // Change max CO limit based on CPU usage
@@ -105,6 +143,9 @@ int processTDP(int temperature, int cpuLoadAverage, int maxTemperature, int curr
     // Apply new CO
     if (newCO != previousCurveOptimizer) {
       print('Apply new CO: $newCO');
+      if (isPerCore) {
+        return (prevCpuLoadAverage, RyzenAdjWrapper.applyCurveOptimizerPerCore(newCO, core));
+      }
       return (prevCpuLoadAverage, RyzenAdjWrapper.applyCurveOptimizerAllCores(newCO));
     }
     return (prevCpuLoadAverage, previousCurveOptimizer);

@@ -54,4 +54,5 @@ jobs:
           artifacts: "release/linux-x86_64.zip"
           tag: ${{ steps.generate_release_tag.outputs.next_release_tag }}
           name: Release ${{ steps.generate_release_tag.outputs.next_release_tag }}
+          token: ${{ secrets.RELEASE_TOKEN }}
 

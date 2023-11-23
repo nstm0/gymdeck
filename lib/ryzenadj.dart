@@ -27,14 +27,14 @@ class RyzenAdjWrapper{
   static int applyCurveOptimizerPerCore(int curveOptimizer, int core) {
     String arguments;
     if (curveOptimizer > 0) {
-      arguments = "-y --core$core -$curveOptimizer";
+      arguments = "--set-coper=0x$core${(0x100000 - curveOptimizer).toRadixString(16)}";
       print('New CO for Core $core: $curveOptimizer');
     }
     else {
-      arguments = "-y --core$core 0";
+      arguments = "--set-coall=0x${core}0";
     }
 
-    var proc = Process.runSync('${File.fromUri(Platform.script).parent.path}/ryzenadjcoper', [arguments]);
+    var proc = Process.runSync('${File.fromUri(Platform.script).parent.path}/ryzenadj', [arguments]);
     print(proc.stderr);
 
     // Save new CO to avoid unnecessary reapplies

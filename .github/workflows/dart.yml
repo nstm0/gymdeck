@@ -38,8 +38,11 @@ jobs:
       - name: Build executable
         run: dart compile exe bin/gymdeck.dart -o bin/gymdeck
 
+      - name: Make chmod
+        run: chmod +x bin/ryzenadj
+
       - name: Copy release files
-        run: mkdir release && zip -u release/linux-x86_64.zip bin/gymdeck bin/libsysres-x86_64.so bin/ryzenadj bin/ryzenadjcoper bin/settings.yaml
+        run: mkdir release && zip -u release/linux-x86_64.zip bin/gymdeck bin/libsysres-x86_64.so bin/ryzenadj bin/settings.yaml
 
       - name: Generate release tag
         id: generate_release_tag

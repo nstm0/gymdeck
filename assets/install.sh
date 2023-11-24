@@ -18,6 +18,8 @@ fi
 
 cp ./bin/* $installDIR/
 
+setcap cap_kill+ep $installDIR/{startExperimental,reloadSettings}
+
 cp ./assets/gymdeck.service /etc/systemd/system/
 
 systemctl daemon-reload

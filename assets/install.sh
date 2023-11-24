@@ -18,6 +18,12 @@ fi
 
 cp ./bin/* $installDIR/
 
+if [ -f ./settings.yaml.old ]
+then
+  cp ./settings.yaml.old $settingsFILE
+fi
+
+chown -R deck:users $installDIR
 setcap cap_kill+ep $installDIR/startExperimental
 setcap cap_kill+ep $installDIR/reloadSettings
 

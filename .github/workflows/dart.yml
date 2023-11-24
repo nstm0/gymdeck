@@ -45,7 +45,7 @@ jobs:
         run: mkdir -p release/bin && mkdir release/assets && cp bin/gymdeck bin/libsysres-x86_64.so bin/ryzenadj bin/settings.yaml bin/reloadSettings bin/startExperimental release/bin/ && cp assets/install.sh release/ && cp assets/gymdeck.service release/assets/
 
       - name: Compress release archive
-        run: zip -u release/linux-x86_64.zip release/*
+        run: zip -ur release/linux-x86_64.zip release/*
 
       - name: Generate release tag
         id: generate_release_tag

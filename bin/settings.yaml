@@ -1,9 +1,12 @@
 # SettingsYaml settings file
-temperatureLimit: 85 #Max temperature limit
-minPowerLimit: 2 #Min TDP value
-maxPowerLimit: 30 #Max TDP Value
-powerLimitChangeStep: 2 #Value to increment or decrement from current TDP
+#temperatureLimit: 85 #Max temperature limit
+#minPowerLimit: 2 #Min TDP value
+#maxPowerLimit: 30 #Max TDP Value
+#powerLimitChangeStep: 2 #Value to increment or decrement from current TDP
+
+#General Settings
 delay: 1000 #Loop delay in milliseconds
+experimental: true #true - does not make changes in system unless enabled from foreign source, useful with unstable values
 
 #General CPU CU Settings
 curveOptimizerChangeStep: 1 #Value to increment or decrement from current Curve Optimizer

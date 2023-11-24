@@ -2,73 +2,66 @@ import 'dart:io';
 import 'dart:math';
 import 'package:gymdeck/ryzenadj.dart';
 import 'package:gymdeck/sysres/base.dart';
-import 'package:settings_yaml/settings_yaml.dart';
+
+import 'settings.dart';
 
 
 void main() async {
   await SystemResources.init(); //init cpuLoadAverage module
 
-  var settings = SettingsYaml.load(pathToSettings: '${File.fromUri(Platform.script).parent.path}/settings.yaml');
+  Settings settings = Settings().init();
 
-  //int maxTemperature = settings['temperatureLimit'] as int; //celsius of course
-
-  //Deck specific limits
-  //int minPowerLimit = settings['minPowerLimit'] as int; //wats
-  //int maxPowerLimit = settings['maxPowerLimit'] as int; //safety :3, watts
-
-  //ALL CPU CU Settings init
-  int maxAllCoreCurveOptimizer = settings['maxAllCoreCurveOptimizer'] as int; //kurwas
-  int minAllCoreCurveOptimiser = settings['minAllCoreCurveOptimizer'] as int; //kurwas
-
-  //Per Core CPU CU Settings init
-  int perCoreCurveOptimizerCoreCount = settings['perCoreCurveOptimizerCoreCount'] as int; //Number of CPU Cores
-  List<dynamic> perCoreCurveOptimizerSets = settings['perCoreCurveOptimizerSets'] as List;
-
-  //General CPU CU Settings init
-  int curveOptimizerType = settings['curveOptimizerType'] as int; //0 - All CPU, 1 - per core CPU
-  int curveOptimizerChangeStep = settings['curveOptimizerChangeStep'] as int; //kurwas
-
-  //int powerLimitChangeStep = settings['powerLimitChangeStep'] as int; //wats
-  //int currentPowerLimit = 15; //watts
   int previousCurveOptimizer = 0; //kurwas
-  List<int> perCorePreviousCurveOptimizer = List.filled(perCoreCurveOptimizerCoreCount, 0); // kurwas per core
+  List<int> perCorePreviousCurveOptimizer = List.filled(settings.perCoreCurveOptimizerCoreCount, 0); // kurwas per core
   int prevCpuLoadAverage = -1; //percents
-  List<int> perCorePreviousCpuLoadAverage = List.filled(perCoreCurveOptimizerCoreCount, -1); // percents per core
-  while (true) {
-    String temperatureFileContent = File('/sys/class/thermal/thermal_zone0/temp').readAsStringSync();
-    int temperature = int.parse(temperatureFileContent) ~/ 1000;
-    int cpuLoadAverage = (SystemResources.cpuLoadAvg() * 100).toInt();
+  List<int> perCorePreviousCpuLoadAverage = List.filled(settings.perCoreCurveOptimizerCoreCount, -1); // percents per core
 
-    //Process TDP works
-    //currentPowerLimit = processTDP(temperature, cpuLoadAverage, maxTemperature, currentPowerLimit, minPowerLimit, maxPowerLimit, powerLimitChangeStep);
-    if (curveOptimizerType == 1) {
-      for (int i = 0; i < perCoreCurveOptimizerCoreCount; i++){
+  //Create PID file for experimental helper;
+  var file = File('gymdeck.pid');
+  file.writeAsStringSync(pid.toString());
+
+  ProcessSignal.sigusr1.watch().listen((event) {settings.isNotAllowedToRun = false;});
+  ProcessSignal.sigusr2.watch().listen((event) {settings = Settings().init();});
+
+  while (true) {
+    if (!settings.isNotAllowedToRun) {
+      String temperatureFileContent = File('/sys/class/thermal/thermal_zone0/temp').readAsStringSync();
+      int temperature = int.parse(temperatureFileContent) ~/ 1000;
+      int cpuLoadAverage = (SystemResources.cpuLoadAvg() * 100).toInt();
+
+      //Process TDP works
+      //currentPowerLimit = processTDP(temperature, cpuLoadAverage, maxTemperature, currentPowerLimit, minPowerLimit, maxPowerLimit, powerLimitChangeStep);
+      if (settings.curveOptimizerType == 1) {
+        for (int i = 0; i < settings.perCoreCurveOptimizerCoreCount; i++){
+          (prevCpuLoadAverage, previousCurveOptimizer) = processCO(
+              temperature,
+              cpuLoadAverage,
+              settings.perCoreCurveOptimizerSets[i]['max'],
+              settings.curveOptimizerChangeStep,
+              perCorePreviousCurveOptimizer[i],
+              perCorePreviousCpuLoadAverage[i],
+              settings.perCoreCurveOptimizerSets[i]['min'],
+              true,
+              i);
+          perCorePreviousCurveOptimizer[i] = previousCurveOptimizer;
+          perCorePreviousCpuLoadAverage[i] = prevCpuLoadAverage;
+        }
+      } else {
         (prevCpuLoadAverage, previousCurveOptimizer) = processCO(
             temperature,
             cpuLoadAverage,
-            perCoreCurveOptimizerSets[i]['max'],
-            curveOptimizerChangeStep,
-            perCorePreviousCurveOptimizer[i],
-            perCorePreviousCpuLoadAverage[i],
-            perCoreCurveOptimizerSets[i]['min'],
-            true,
-            i);
-        perCorePreviousCurveOptimizer[i] = previousCurveOptimizer;
-        perCorePreviousCpuLoadAverage[i] = prevCpuLoadAverage;
+            settings.maxAllCoreCurveOptimizer,
+            settings.curveOptimizerChangeStep,
+            previousCurveOptimizer,
+            prevCpuLoadAverage,
+            settings.minAllCoreCurveOptimiser,
+            false,
+            0);
       }
     } else {
-      (prevCpuLoadAverage, previousCurveOptimizer) = processCO(
-          temperature,
-          cpuLoadAverage,
-          maxAllCoreCurveOptimizer,
-          curveOptimizerChangeStep,
-          previousCurveOptimizer,
-          prevCpuLoadAverage,
-          minAllCoreCurveOptimiser,
-          false,
-          0);
+
     }
-    sleep(Duration(milliseconds: settings['delay'] as int));
+    await Future.delayed(settings.delayTime);
   }
 
 }

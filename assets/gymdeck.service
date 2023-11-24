@@ -1,0 +1,10 @@
+[Unit]
+Description=Gym Deck is various set of power management tweaks
+After=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
+
+[Service]
+ExecStart=/home/deck/.gymdeck/gymdeck
+Restart=always
+
+[Install]
+WantedBy=multi-user.target suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target

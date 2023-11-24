@@ -35,14 +35,17 @@ jobs:
       - name: Analyze project source
         run: dart analyze
 
-      - name: Build executable
-        run: dart compile exe bin/gymdeck.dart -o bin/gymdeck
+      - name: Build executables
+        run: dart compile exe bin/gymdeck.dart -o bin/gymdeck && dart compile exe bin/reloadSettings.dart -o bin/reloadSettings && dart compile exe bin/startExperimental.dart -o bin/startExperimental
 
       - name: Make chmod
-        run: chmod +x bin/ryzenadj
+        run: chmod +x bin/ryzenadj && chmod +x assets/install.sh
 
       - name: Copy release files
-        run: mkdir release && zip -u release/linux-x86_64.zip bin/gymdeck bin/libsysres-x86_64.so bin/ryzenadj bin/settings.yaml
+        run: mkdir -p release/bin && mkdir release/assets && cp bin/gymdeck bin/libsysres-x86_64.so bin/ryzenadj bin/settings.yaml bin/reloadSettings bin/startExperimental release/bin/ && cp assets/install.sh release/ && cp assets/gymdeck.service release/assets/
+
+      - name: Compress release archive
+        run: zip -u release/linux-x86_64.zip release/*
 
       - name: Generate release tag
         id: generate_release_tag

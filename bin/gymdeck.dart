@@ -17,7 +17,7 @@ void main() async {
   List<int> perCorePreviousCpuLoadAverage = List.filled(settings.perCoreCurveOptimizerCoreCount, -1); // percents per core
 
   //Create PID file for experimental helper;
-  var file = File('gymdeck.pid');
+  var file = File('${File.fromUri(Platform.script).parent.path}/gymdeck.pid');
   file.writeAsStringSync(pid.toString());
 
   ProcessSignal.sigusr1.watch().listen((event) {settings.isNotAllowedToRun = false;});

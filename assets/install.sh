@@ -18,7 +18,8 @@ fi
 
 cp ./bin/* $installDIR/
 
-setcap cap_kill+ep $installDIR/{startExperimental,reloadSettings}
+setcap cap_kill+ep $installDIR/startExperimental
+setcap cap_kill+ep $installDIR/reloadSettings
 
 cp ./assets/gymdeck.service /etc/systemd/system/
 

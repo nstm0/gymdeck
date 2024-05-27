@@ -42,7 +42,10 @@ void main() async {
               perCorePreviousCpuLoadAverage[i],
               settings.perCoreCurveOptimizerSets[i]['min'],
               true,
-              i);
+              i,
+              settings.minCpuLoadAvg,
+              settings.maxCpuLoadAvg,
+              settings.cpuLoadAvgThreshold);
           perCorePreviousCurveOptimizer[i] = previousCurveOptimizer;
           perCorePreviousCpuLoadAverage[i] = prevCpuLoadAverage;
         }
@@ -56,7 +59,10 @@ void main() async {
             prevCpuLoadAverage,
             settings.minAllCoreCurveOptimiser,
             false,
-            0);
+            0,
+            settings.minCpuLoadAvg,
+            settings.maxCpuLoadAvg,
+            settings.cpuLoadAvgThreshold);
       }
     } else {
 
@@ -66,13 +72,13 @@ void main() async {
 
 }
 
-int processTDP(int temperature, int cpuLoadAverage, int maxTemperature, int currentPowerLimit, int minPowerLimit, int maxPowerLimit, int powerLimitChangeStep) {
+int processTDP(int temperature, int cpuLoadAverage, int maxTemperature, int currentPowerLimit, int minPowerLimit, int maxPowerLimit, int powerLimitChangeStep, int minCpuLoadAvg, int maxCpuLoadAvg, int cpuLoadAvgThreshold) {
   int newPowerLimit = currentPowerLimit;
   if (temperature >= maxTemperature - 2) {
     newPowerLimit =
         max(minPowerLimit, newPowerLimit - powerLimitChangeStep);
   } //too high temp, reducing
-  else if (cpuLoadAverage > settings.minCpuLoadAvg && temperature <= maxTemperature - 5) {
+  else if (cpuLoadAverage > minCpuLoadAvg && temperature <= maxTemperature - 5) {
     newPowerLimit =
         min(maxPowerLimit, newPowerLimit + powerLimitChangeStep);
   } //too high load, not too hot, why not to BURN YOUR DECK?!
@@ -88,17 +94,17 @@ int processTDP(int temperature, int cpuLoadAverage, int maxTemperature, int curr
 
 
 
-(int, int) processCO(int temperature, int cpuLoadAverage, int maxCurveOptimizer, int curveOptimizerChangeStep, int previousCurveOptimizer, int prevCpuLoadAverage, int minCurveOptimiser, bool isPerCore, int core) {
+(int, int) processCO(int temperature, int cpuLoadAverage, int maxCurveOptimizer, int curveOptimizerChangeStep, int previousCurveOptimizer, int prevCpuLoadAverage, int minCurveOptimiser, bool isPerCore, int core, int minCpuLoadAvg, int maxCpuLoadAvg, int cpuLoadAvgThreshold) {
     int newMaxCO = maxCurveOptimizer;
     int newCO = 0;
     // Change max CO limit based on CPU usage
-    if (cpuLoadAverage < settings.minCpuLoadAvg) {
+    if (cpuLoadAverage < minCpuLoadAvg) {
       newMaxCO = maxCurveOptimizer;
     }
-    else if (cpuLoadAverage >= settings.minCpuLoadAvg && cpuLoadAverage < settings.maxCpuLoadAvg) {
+    else if (cpuLoadAverage >= minCpuLoadAvg && cpuLoadAverage < maxCpuLoadAvg) {
       newMaxCO = maxCurveOptimizer - curveOptimizerChangeStep * 2;
     }
-    else if (cpuLoadAverage >= settings.maxCpuLoadAvg) {
+    else if (cpuLoadAverage >= maxCpuLoadAvg) {
       newMaxCO = maxCurveOptimizer;
     }
 
@@ -106,20 +112,20 @@ int processTDP(int temperature, int cpuLoadAverage, int maxTemperature, int curr
     if (prevCpuLoadAverage < 0) prevCpuLoadAverage = 100;
 
     // Increase CO if the CPU load is increased by 10
-    if (cpuLoadAverage > prevCpuLoadAverage + settings.cpuLoadAvgThreshold)
+    if (cpuLoadAverage > prevCpuLoadAverage + cpuLoadAvgThreshold)
     {
       newCO = previousCurveOptimizer + curveOptimizerChangeStep;
 
       // Store the current CPU load for the next iteration
-      prevCpuLoadAverage = prevCpuLoadAverage + settings.cpuLoadAvgThreshold;
+      prevCpuLoadAverage = prevCpuLoadAverage + cpuLoadAvgThreshold;
     }
     // Decrease CO if the CPU load is decreased by 10
-    else if (cpuLoadAverage < prevCpuLoadAverage - settings.cpuLoadAvgThreshold)
+    else if (cpuLoadAverage < prevCpuLoadAverage - cpuLoadAvgThreshold)
     {
       newCO = previousCurveOptimizer - curveOptimizerChangeStep;
 
       // Store the current CPU load for the next iteration
-      prevCpuLoadAverage = prevCpuLoadAverage - settings.cpuLoadAvgThreshold;
+      prevCpuLoadAverage = prevCpuLoadAverage - cpuLoadAvgThreshold;
     }
 
     // Make sure min and max CO is not exceeded
@@ -131,7 +137,7 @@ int processTDP(int temperature, int cpuLoadAverage, int maxTemperature, int curr
 
     if (cpuLoadAverage < 5) newCO = 0;
 
-    if (cpuLoadAverage > settings.maxCpuLoadAvg) newCO = maxCurveOptimizer;
+    if (cpuLoadAverage > maxCpuLoadAvg) newCO = maxCurveOptimizer;
 
     // Apply new CO
     if (newCO != previousCurveOptimizer) {

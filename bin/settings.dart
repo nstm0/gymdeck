@@ -28,6 +28,9 @@ class Settings {
   //General settingsFile init
   late Duration delayTime;
   late bool isNotAllowedToRun;
+  late int minCpuLoadAvg;
+  late int maxCpuLoadAvg;
+  late int cpuLoadAvgThreshold;
   
   Settings init() {
     settingsFile = SettingsYaml.load(pathToSettings: '${File.fromUri(Platform.script).parent.path}/settings.yaml');
@@ -55,6 +58,9 @@ class Settings {
     //General settingsFile init
     delayTime = Duration(milliseconds: settingsFile['delay'] as int);
     isNotAllowedToRun = settingsFile['experimental'] as bool;
+    minCpuLoadAvg = settingsFile['minCpuLoadAvg'] as int;
+    maxCpuLoadAvg = settingsFile['maxCpuLoadAvg'] as int;
+    cpuLoadAvgThreshold = settingsFile['cpuLoadAvgThreshold'] as int;
     return this;
   }
 }

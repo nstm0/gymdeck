@@ -7,6 +7,9 @@
 #General Settings
 delay: 1000 #Loop delay in milliseconds
 experimental: true #true - does not make changes in system unless enabled from foreign source, useful with unstable values
+minCpuLoadAvg: 10 #low temperature trigger - when lower than value, decrease CO
+maxCpuLoadAvg: 80 #max temperature trigger - when higher than value, increase CO
+cpuLoadAvgThreshold: 10 #Diff between prev temp and current to change CO
 
 #General CPU CU Settings
 curveOptimizerChangeStep: 1 #Value to increment or decrement from current Curve Optimizer
